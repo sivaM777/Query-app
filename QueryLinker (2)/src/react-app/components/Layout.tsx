@@ -239,60 +239,61 @@ export default function Layout({ children }: LayoutProps) {
                   
                   <AnimatePresence>
                     {showProfileMenu && (
-                      <motion.div
-                        initial={{ opacity: 0, scale: 0.95, y: -10 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                        className="fixed right-4 top-16 w-72 bg-slate-900 border border-white/10 rounded-xl shadow-2xl backdrop-blur-xl"
-                        style={{ zIndex: 99999 }}
-                      >
-                        {/* Profile Header */}
-                        <div className="px-4 py-3 border-b border-white/10">
-                          <div className="flex items-center space-x-3">
-                            <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center">
-                              <User className="w-5 h-5 text-white" />
-                            </div>
-                            <div>
-                              <p className="text-white font-medium">System Administrator</p>
-                              <p className="text-gray-400 text-sm">admin@company.com</p>
+                      <React.Fragment>
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9998]"
+                          onClick={() => setShowProfileMenu(false)}
+                        />
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                          animate={{ opacity: 1, scale: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                          className="fixed right-4 top-16 w-72 bg-slate-900 border border-white/10 rounded-xl shadow-2xl backdrop-blur-xl z-[9999]"
+                        >
+                          <div className="px-4 py-3 border-b border-white/10">
+                            <div className="flex items-center space-x-3">
+                              <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center">
+                                <User className="w-5 h-5 text-white" />
+                              </div>
+                              <div>
+                                <p className="text-white font-medium">System Administrator</p>
+                                <p className="text-gray-400 text-sm">admin@company.com</p>
+                              </div>
                             </div>
                           </div>
-                        </div>
-
-                        {/* Profile Menu Items */}
-                        <div className="py-2">
-                          <button className="w-full flex items-center space-x-3 px-4 py-2 text-gray-300 hover:text-white hover:bg-white/5 transition-colors">
-                            <UserCog className="w-4 h-4" />
-                            <span>Account Settings</span>
-                          </button>
-                          <button className="w-full flex items-center space-x-3 px-4 py-2 text-gray-300 hover:text-white hover:bg-white/5 transition-colors">
-                            <Shield className="w-4 h-4" />
-                            <span>Security & Permissions</span>
-                          </button>
-                          <button className="w-full flex items-center space-x-3 px-4 py-2 text-gray-300 hover:text-white hover:bg-white/5 transition-colors">
-                            <Activity className="w-4 h-4" />
-                            <span>Activity Log</span>
-                          </button>
-                          <button className="w-full flex items-center space-x-3 px-4 py-2 text-gray-300 hover:text-white hover:bg-white/5 transition-colors">
-                            <Folder className="w-4 h-4" />
-                            <span>Manage Workspaces</span>
-                          </button>
-                          
-                          <div className="border-t border-white/10 my-2"></div>
-                          
-                          <button className="w-full flex items-center space-x-3 px-4 py-2 text-gray-300 hover:text-white hover:bg-white/5 transition-colors">
-                            <HelpCircle className="w-4 h-4" />
-                            <span>Help & Documentation</span>
-                          </button>
-                          
-                          <div className="border-t border-white/10 my-2"></div>
-                          
-                          <button className="w-full flex items-center space-x-3 px-4 py-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors">
-                            <LogOut className="w-4 h-4" />
-                            <span>Sign Out</span>
-                          </button>
-                        </div>
-                      </motion.div>
+                          <div className="py-2">
+                            <button className="w-full flex items-center space-x-3 px-4 py-2 text-gray-300 hover:text-white hover:bg-white/5 transition-colors">
+                              <UserCog className="w-4 h-4" />
+                              <span>Account Settings</span>
+                            </button>
+                            <button className="w-full flex items-center space-x-3 px-4 py-2 text-gray-300 hover:text-white hover:bg-white/5 transition-colors">
+                              <Shield className="w-4 h-4" />
+                              <span>Security & Permissions</span>
+                            </button>
+                            <button className="w-full flex items-center space-x-3 px-4 py-2 text-gray-300 hover:text-white hover:bg-white/5 transition-colors">
+                              <Activity className="w-4 h-4" />
+                              <span>Activity Log</span>
+                            </button>
+                            <button className="w-full flex items-center space-x-3 px-4 py-2 text-gray-300 hover:text-white hover:bg-white/5 transition-colors">
+                              <Folder className="w-4 h-4" />
+                              <span>Manage Workspaces</span>
+                            </button>
+                            <div className="border-t border-white/10 my-2"></div>
+                            <button className="w-full flex items-center space-x-3 px-4 py-2 text-gray-300 hover:text-white hover:bg-white/5 transition-colors">
+                              <HelpCircle className="w-4 h-4" />
+                              <span>Help & Documentation</span>
+                            </button>
+                            <div className="border-t border-white/10 my-2"></div>
+                            <button className="w-full flex items-center space-x-3 px-4 py-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors">
+                              <LogOut className="w-4 h-4" />
+                              <span>Sign Out</span>
+                            </button>
+                          </div>
+                        </motion.div>
+                      </React.Fragment>
                     )}
                   </AnimatePresence>
                 </div>
