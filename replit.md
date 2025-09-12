@@ -16,6 +16,11 @@ QueryLinker is a comprehensive knowledge management system built with React, Typ
 - Initialized local D1 database with migrations for development
 - Fixed missing react-is dependency for chart components
 - Configured deployment settings for autoscale deployment
+- **Enhanced SLA Management**: Added comprehensive export functionality with PDF, Excel, CSV, and HTML format support
+- **Improved Navigation**: Removed Slack integration from sidebar, streamlined navigation structure
+- **Dynamic Workspaces**: Connected workspaces now display actual system integrations dynamically
+- **Professional Profile Menu**: Added ITSM-appropriate profile dropdown with account management, security, activity log, and workspace management options
+- **Backend Export API**: Implemented `/api/sla-export` endpoint supporting multiple export formats with proper content headers
 
 ## Project Structure
 - `src/react-app/` - React frontend application

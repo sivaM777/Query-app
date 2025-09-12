@@ -214,10 +214,9 @@ export default function Layout({ children }: LayoutProps) {
                 <div className="relative">
                   <button 
                     onClick={() => setShowProfileMenu(!showProfileMenu)}
-                    className="flex items-center space-x-2 p-2 rounded-lg hover:bg-white/10 transition-colors"
+                    className="p-2 rounded-lg hover:bg-white/10 transition-colors"
                   >
                     <User className="w-5 h-5 text-white" />
-                    <ChevronDown className="w-3 h-3 text-white" />
                   </button>
                   
                   <AnimatePresence>
