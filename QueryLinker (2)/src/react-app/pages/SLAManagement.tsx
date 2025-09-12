@@ -12,7 +12,12 @@ import {
   Pause,
   BarChart3,
   X,
-  Save
+  Save,
+  Download,
+  FileText,
+  FileSpreadsheet,
+  Database,
+  FileImage
 } from 'lucide-react';
 import MetricCard from '@/react-app/components/MetricCard';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
@@ -51,6 +56,7 @@ const getPriorityColor = (priority: string) => {
 
 export default function SLAManagement() {
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
   const [editingSLA, setEditingSLA] = useState<any>(null);
   const [formData, setFormData] = useState({
     name: '',
@@ -118,6 +124,37 @@ export default function SLAManagement() {
     }
   };
 
+  const handleExport = async (format: 'pdf' | 'xlsx' | 'csv' | 'html') => {
+    try {
+      const response = await fetch(`/api/sla-export?format=${format}`, {
+        method: 'GET',
+        headers: {
+          'Accept': format === 'csv' ? 'text/csv' : 
+                   format === 'xlsx' ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' :
+                   format === 'html' ? 'text/html' :
+                   'application/pdf'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Export failed');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `sla-report-${new Date().toISOString().split('T')[0]}.${format}`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      setShowExportModal(false);
+    } catch (error) {
+      console.error('Export failed:', error);
+    }
+  };
+
   // Mock data for display - in real app this would come from API
   const totalCompliance = 94.2;
   const totalTickets = 127;
@@ -135,15 +172,26 @@ export default function SLAManagement() {
           <h1 className="text-3xl font-bold text-white mb-2">SLA Management</h1>
           <p className="text-gray-300">Monitor and manage service level agreements across all systems</p>
         </div>
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={() => setShowAddModal(true)}
-          className="px-6 py-3 bg-gradient-to-r from-purple-500 to-blue-500 rounded-xl text-white font-medium hover:shadow-lg transition-all duration-200 flex items-center space-x-2"
-        >
-          <Plus className="w-5 h-5" />
-          <span>New SLA</span>
-        </motion.button>
+        <div className="flex items-center space-x-3">
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setShowExportModal(true)}
+            className="px-6 py-3 bg-white/10 border border-white/20 rounded-xl text-white font-medium hover:bg-white/20 transition-all duration-200 flex items-center space-x-2"
+          >
+            <Download className="w-5 h-5" />
+            <span>Export SLA Report</span>
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setShowAddModal(true)}
+            className="px-6 py-3 bg-gradient-to-r from-purple-500 to-blue-500 rounded-xl text-white font-medium hover:shadow-lg transition-all duration-200 flex items-center space-x-2"
+          >
+            <Plus className="w-5 h-5" />
+            <span>New SLA</span>
+          </motion.button>
+        </div>
       </motion.div>
 
       {/* Metrics */}
@@ -472,6 +520,176 @@ export default function SLAManagement() {
                     </motion.button>
                   </div>
                 </form>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Export SLA Report Modal */}
+        <AnimatePresence>
+          {showExportModal && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+              onClick={() => setShowExportModal(false)}
+            >
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                className="bg-slate-900 border border-white/10 rounded-2xl p-6 w-full max-w-2xl mx-4"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center space-x-3">
+                    <Download className="w-6 h-6 text-purple-400" />
+                    <h3 className="text-2xl font-bold text-white">Export SLA Report</h3>
+                  </div>
+                  <button
+                    onClick={() => setShowExportModal(false)}
+                    className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                  >
+                    <X className="w-5 h-5 text-gray-400" />
+                  </button>
+                </div>
+
+                <p className="text-gray-300 mb-8">
+                  Choose your preferred format to export the current SLA data and analytics
+                </p>
+
+                {/* Report Summary */}
+                <div className="bg-white/5 rounded-xl p-6 mb-8">
+                  <h4 className="text-lg font-semibold text-white mb-4">Report Summary</h4>
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 text-center">
+                    <div>
+                      <p className="text-gray-400 text-sm mb-1">Total SLAs:</p>
+                      <p className="text-2xl font-bold text-white">{(slaConfigs || []).length}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-400 text-sm mb-1">Active:</p>
+                      <p className="text-2xl font-bold text-white">{(slaConfigs || []).filter(sla => sla.is_active).length}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-400 text-sm mb-1">Compliance:</p>
+                      <p className="text-2xl font-bold text-white">NaN%</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-400 text-sm mb-1">Breached:</p>
+                      <p className="text-2xl font-bold text-white">0</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Export Format Options */}
+                <div className="mb-8">
+                  <h4 className="text-lg font-semibold text-white mb-4">Choose Export Format</h4>
+                  <div className="space-y-3">
+                    {/* PDF Report */}
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => handleExport('pdf')}
+                      className="w-full flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-red-500/30 rounded-xl transition-all duration-200"
+                    >
+                      <div className="flex items-center space-x-4">
+                        <div className="w-12 h-12 bg-red-500/20 rounded-xl flex items-center justify-center">
+                          <FileText className="w-6 h-6 text-red-400" />
+                        </div>
+                        <div className="text-left">
+                          <h5 className="text-white font-semibold">PDF Report</h5>
+                          <p className="text-gray-400 text-sm">Comprehensive report with charts and analytics</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <span className="px-3 py-1 bg-red-500/20 text-red-400 text-sm rounded-full border border-red-500/30">.pdf</span>
+                        <Download className="w-5 h-5 text-gray-400" />
+                      </div>
+                    </motion.button>
+
+                    {/* Excel Spreadsheet */}
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => handleExport('xlsx')}
+                      className="w-full flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-green-500/30 rounded-xl transition-all duration-200"
+                    >
+                      <div className="flex items-center space-x-4">
+                        <div className="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center">
+                          <FileSpreadsheet className="w-6 h-6 text-green-400" />
+                        </div>
+                        <div className="text-left">
+                          <h5 className="text-white font-semibold">Excel Spreadsheet</h5>
+                          <p className="text-gray-400 text-sm">Detailed data with formulas and pivot tables</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <span className="px-3 py-1 bg-green-500/20 text-green-400 text-sm rounded-full border border-green-500/30">.xlsx</span>
+                        <Download className="w-5 h-5 text-gray-400" />
+                      </div>
+                    </motion.button>
+
+                    {/* CSV Data */}
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => handleExport('csv')}
+                      className="w-full flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-blue-500/30 rounded-xl transition-all duration-200"
+                    >
+                      <div className="flex items-center space-x-4">
+                        <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center">
+                          <Database className="w-6 h-6 text-blue-400" />
+                        </div>
+                        <div className="text-left">
+                          <h5 className="text-white font-semibold">CSV Data</h5>
+                          <p className="text-gray-400 text-sm">Raw data for analysis and processing</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <span className="px-3 py-1 bg-blue-500/20 text-blue-400 text-sm rounded-full border border-blue-500/30">.csv</span>
+                        <Download className="w-5 h-5 text-gray-400" />
+                      </div>
+                    </motion.button>
+
+                    {/* HTML Report */}
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => handleExport('html')}
+                      className="w-full flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-purple-500/30 rounded-xl transition-all duration-200"
+                    >
+                      <div className="flex items-center space-x-4">
+                        <div className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center">
+                          <FileImage className="w-6 h-6 text-purple-400" />
+                        </div>
+                        <div className="text-left">
+                          <h5 className="text-white font-semibold">HTML Report</h5>
+                          <p className="text-gray-400 text-sm">Web-based report for viewing and printing</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <span className="px-3 py-1 bg-purple-500/20 text-purple-400 text-sm rounded-full border border-purple-500/30">.html</span>
+                        <Download className="w-5 h-5 text-gray-400" />
+                      </div>
+                    </motion.button>
+                  </div>
+                </div>
+
+                {/* Additional Information */}
+                <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4">
+                  <div className="flex items-start space-x-3">
+                    <CheckCircle2 className="w-5 h-5 text-blue-400 mt-0.5" />
+                    <div className="text-sm text-blue-300">
+                      <p className="font-medium mb-2">All formats include:</p>
+                      <ul className="space-y-1 text-blue-200">
+                        <li>• Current SLA status and compliance metrics</li>
+                        <li>• Breach analysis and escalation policies</li>
+                        <li>• Generated on {new Date().toLocaleDateString()}</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
               </motion.div>
             </motion.div>
           )}
