@@ -1,0 +1,55 @@
+
+CREATE TABLE users (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  email TEXT,
+  name TEXT,
+  role TEXT,
+  is_active BOOLEAN DEFAULT 1,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE integrations (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT,
+  type TEXT,
+  config TEXT,
+  is_active BOOLEAN DEFAULT 1,
+  last_sync_at DATETIME,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE knowledge_base (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  title TEXT,
+  content TEXT,
+  category TEXT,
+  tags TEXT,
+  rating REAL DEFAULT 0,
+  views INTEGER DEFAULT 0,
+  is_published BOOLEAN DEFAULT 0,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE sla_configs (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT,
+  priority TEXT,
+  response_time INTEGER,
+  resolution_time INTEGER,
+  escalation_rules TEXT,
+  is_active BOOLEAN DEFAULT 1,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE search_queries (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  query TEXT,
+  user_id INTEGER,
+  results_count INTEGER,
+  execution_time REAL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
