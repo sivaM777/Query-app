@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -48,6 +48,24 @@ export default function Layout({ children }: LayoutProps) {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const location = useLocation();
   const { data: integrations } = useIntegrations();
+  const profileMenuRef = useRef<HTMLDivElement>(null);
+
+  // Close profile menu when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target as Node)) {
+        setShowProfileMenu(false);
+      }
+    }
+
+    if (showProfileMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showProfileMenu]);
 
   return (
     <div className={`${darkMode ? 'dark' : ''} min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900`}>
@@ -211,7 +229,7 @@ export default function Layout({ children }: LayoutProps) {
                   <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></div>
                 </button>
 
-                <div className="relative">
+                <div className="relative" ref={profileMenuRef}>
                   <button 
                     onClick={() => setShowProfileMenu(!showProfileMenu)}
                     className="p-2 rounded-lg hover:bg-white/10 transition-colors"
@@ -225,7 +243,7 @@ export default function Layout({ children }: LayoutProps) {
                         initial={{ opacity: 0, scale: 0.95, y: -10 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                        className="absolute right-0 mt-2 w-72 bg-slate-900 border border-white/10 rounded-xl shadow-xl backdrop-blur-xl z-50"
+                        className="absolute right-0 mt-2 w-72 bg-slate-900 border border-white/10 rounded-xl shadow-xl backdrop-blur-xl z-[9999]"
                       >
                         {/* Profile Header */}
                         <div className="px-4 py-3 border-b border-white/10">
