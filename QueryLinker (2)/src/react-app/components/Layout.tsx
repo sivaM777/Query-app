@@ -187,7 +187,7 @@ export default function Layout({ children }: LayoutProps) {
         {/* Main content */}
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Top navbar */}
-          <header className="bg-black/20 backdrop-blur-xl border-b border-white/10 px-6 py-4">
+          <header className="bg-black/20 backdrop-blur-xl border-b border-white/10 px-6 py-4 relative overflow-visible">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
                 <button
@@ -238,30 +238,30 @@ export default function Layout({ children }: LayoutProps) {
                   </button>
                   
 {showProfileMenu && (
-                    <div className="absolute right-0 top-full mt-2 w-64 bg-slate-800/95 backdrop-blur-sm border border-white/20 rounded-lg shadow-xl z-50">
-                      <div className="px-3 py-2 border-b border-white/10">
-                        <p className="text-white font-medium text-sm">System Administrator</p>
+                    <div className="absolute right-0 top-full mt-2 w-60 bg-slate-800/98 backdrop-blur border border-white/20 rounded-lg shadow-2xl z-[1000] overflow-visible">
+                      <div className="px-3 py-2.5 border-b border-white/20">
+                        <p className="text-white font-semibold text-sm">System Administrator</p>
                         <p className="text-gray-400 text-xs">admin@company.com</p>
                       </div>
-                      <div className="py-1">
-                        <button className="w-full flex items-center space-x-2 px-3 py-2 text-gray-300 hover:text-white hover:bg-white/10 transition-colors text-sm">
+                      <div className="py-1.5">
+                        <button className="w-full flex items-center space-x-2.5 px-3 py-2 text-gray-300 hover:text-white hover:bg-white/10 transition-all text-sm rounded-sm">
                           <UserCog className="w-4 h-4" />
                           <span>Account Settings</span>
                         </button>
-                        <button className="w-full flex items-center space-x-2 px-3 py-2 text-gray-300 hover:text-white hover:bg-white/10 transition-colors text-sm">
+                        <button className="w-full flex items-center space-x-2.5 px-3 py-2 text-gray-300 hover:text-white hover:bg-white/10 transition-all text-sm rounded-sm">
                           <Shield className="w-4 h-4" />
                           <span>Security & Permissions</span>
                         </button>
-                        <button className="w-full flex items-center space-x-2 px-3 py-2 text-gray-300 hover:text-white hover:bg-white/10 transition-colors text-sm">
+                        <button className="w-full flex items-center space-x-2.5 px-3 py-2 text-gray-300 hover:text-white hover:bg-white/10 transition-all text-sm rounded-sm">
                           <Activity className="w-4 h-4" />
                           <span>Activity Log</span>
                         </button>
-                        <button className="w-full flex items-center space-x-2 px-3 py-2 text-gray-300 hover:text-white hover:bg-white/10 transition-colors text-sm">
+                        <button className="w-full flex items-center space-x-2.5 px-3 py-2 text-gray-300 hover:text-white hover:bg-white/10 transition-all text-sm rounded-sm">
                           <HelpCircle className="w-4 h-4" />
                           <span>Help & Documentation</span>
                         </button>
-                        <div className="border-t border-white/10 my-1"></div>
-                        <button className="w-full flex items-center space-x-2 px-3 py-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors text-sm">
+                        <div className="border-t border-white/20 my-1.5"></div>
+                        <button className="w-full flex items-center space-x-2.5 px-3 py-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all text-sm rounded-sm">
                           <LogOut className="w-4 h-4" />
                           <span>Sign Out</span>
                         </button>
