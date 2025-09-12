@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search,
   Home,
@@ -9,7 +9,6 @@ import {
   BarChart3,
   BookOpen,
   Zap,
-  Slack,
   Menu,
   X,
   Bell,
@@ -17,8 +16,16 @@ import {
   Moon,
   Sun,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  LogOut,
+  UserCog,
+  Shield,
+  Activity,
+  HelpCircle,
+  Folder,
+  ChevronDown
 } from 'lucide-react';
+import { useIntegrations } from '@/react-app/hooks/useApi';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -31,7 +38,6 @@ const navigation = [
   { name: 'System Integrations', href: '/integrations', icon: Database },
   { name: 'SLA Management', href: '/sla', icon: Zap },
   { name: 'Analytics', href: '/analytics', icon: BarChart3 },
-  { name: 'Slack Integration', href: '/slack', icon: Slack },
   { name: 'Settings', href: '/settings', icon: Settings },
 ];
 
@@ -39,7 +45,9 @@ export default function Layout({ children }: LayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [darkMode, setDarkMode] = useState(true);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
   const location = useLocation();
+  const { data: integrations } = useIntegrations();
 
   return (
     <div className={`${darkMode ? 'dark' : ''} min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900`}>
@@ -128,13 +136,30 @@ export default function Layout({ children }: LayoutProps) {
                 className="p-4 border-t border-white/10"
               >
                 <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
-                  CONNECTED WORKSPACES (1)
+                  CONNECTED WORKSPACES ({(integrations || []).filter(integration => integration.is_active).length})
                 </h3>
-                <div className="flex items-center space-x-3 px-3 py-2 text-gray-300">
-                  <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
-                    <span className="text-white text-xs font-bold">J</span>
-                  </div>
-                  <span className="text-sm">Jira</span>
+                <div className="space-y-2">
+                  {(integrations || []).filter(integration => integration.is_active).map((integration) => (
+                    <div key={integration.id} className="flex items-center space-x-3 px-3 py-2 text-gray-300 hover:bg-white/5 rounded-lg transition-colors">
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold ${
+                        integration.type === 'jira' ? 'bg-blue-500' :
+                        integration.type === 'github' ? 'bg-gray-800' :
+                        integration.type === 'servicenow' ? 'bg-green-500' :
+                        integration.type === 'zendesk' ? 'bg-orange-500' :
+                        integration.type === 'confluence' ? 'bg-blue-600' :
+                        'bg-purple-500'
+                      }`}>
+                        {integration.name.charAt(0).toUpperCase()}
+                      </div>
+                      <span className="text-sm">{integration.name}</span>
+                    </div>
+                  ))}
+                  {(!integrations || integrations.filter(integration => integration.is_active).length === 0) && (
+                    <div className="text-center py-4">
+                      <p className="text-gray-500 text-sm">No active integrations</p>
+                      <p className="text-gray-600 text-xs mt-1">Connect systems to see workspaces here</p>
+                    </div>
+                  )}
                 </div>
               </motion.div>
             )}
@@ -186,9 +211,73 @@ export default function Layout({ children }: LayoutProps) {
                   <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></div>
                 </button>
 
-                <button className="p-2 rounded-lg hover:bg-white/10 transition-colors">
-                  <User className="w-5 h-5 text-white" />
-                </button>
+                <div className="relative">
+                  <button 
+                    onClick={() => setShowProfileMenu(!showProfileMenu)}
+                    className="flex items-center space-x-2 p-2 rounded-lg hover:bg-white/10 transition-colors"
+                  >
+                    <User className="w-5 h-5 text-white" />
+                    <ChevronDown className="w-3 h-3 text-white" />
+                  </button>
+                  
+                  <AnimatePresence>
+                    {showProfileMenu && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                        className="absolute right-0 mt-2 w-72 bg-slate-900 border border-white/10 rounded-xl shadow-xl backdrop-blur-xl z-50"
+                      >
+                        {/* Profile Header */}
+                        <div className="px-4 py-3 border-b border-white/10">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center">
+                              <User className="w-5 h-5 text-white" />
+                            </div>
+                            <div>
+                              <p className="text-white font-medium">System Administrator</p>
+                              <p className="text-gray-400 text-sm">admin@company.com</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Profile Menu Items */}
+                        <div className="py-2">
+                          <button className="w-full flex items-center space-x-3 px-4 py-2 text-gray-300 hover:text-white hover:bg-white/5 transition-colors">
+                            <UserCog className="w-4 h-4" />
+                            <span>Account Settings</span>
+                          </button>
+                          <button className="w-full flex items-center space-x-3 px-4 py-2 text-gray-300 hover:text-white hover:bg-white/5 transition-colors">
+                            <Shield className="w-4 h-4" />
+                            <span>Security & Permissions</span>
+                          </button>
+                          <button className="w-full flex items-center space-x-3 px-4 py-2 text-gray-300 hover:text-white hover:bg-white/5 transition-colors">
+                            <Activity className="w-4 h-4" />
+                            <span>Activity Log</span>
+                          </button>
+                          <button className="w-full flex items-center space-x-3 px-4 py-2 text-gray-300 hover:text-white hover:bg-white/5 transition-colors">
+                            <Folder className="w-4 h-4" />
+                            <span>Manage Workspaces</span>
+                          </button>
+                          
+                          <div className="border-t border-white/10 my-2"></div>
+                          
+                          <button className="w-full flex items-center space-x-3 px-4 py-2 text-gray-300 hover:text-white hover:bg-white/5 transition-colors">
+                            <HelpCircle className="w-4 h-4" />
+                            <span>Help & Documentation</span>
+                          </button>
+                          
+                          <div className="border-t border-white/10 my-2"></div>
+                          
+                          <button className="w-full flex items-center space-x-3 px-4 py-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors">
+                            <LogOut className="w-4 h-4" />
+                            <span>Sign Out</span>
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               </div>
             </div>
           </header>

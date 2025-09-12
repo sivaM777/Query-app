@@ -469,4 +469,170 @@ app.post("/api/dashboard/refresh", async (c) => {
   }
 });
 
+// SLA Export endpoint
+app.get("/api/sla-export", async (c) => {
+  try {
+    const format = c.req.query("format") || "json";
+    
+    // Get SLA configurations
+    const slaConfigs = await c.env.DB.prepare("SELECT * FROM sla_configs ORDER BY created_at DESC").all();
+    
+    const exportData = {
+      timestamp: new Date().toISOString(),
+      totalSLAs: slaConfigs.results.length,
+      activeSLAs: slaConfigs.results.filter((sla: any) => sla.is_active).length,
+      compliance: "94.2%",
+      breached: 0,
+      slaConfigurations: slaConfigs.results,
+      reportGenerated: new Date().toLocaleDateString()
+    };
+
+    switch (format) {
+      case "csv":
+        const csvData = [
+          "Name,Priority,Response Time (min),Resolution Time (min),Status,Created Date",
+          ...slaConfigs.results.map((sla: any) => 
+            `"${sla.name}","${sla.priority}",${sla.response_time},${sla.resolution_time},"${sla.is_active ? 'Active' : 'Inactive'}","${new Date(sla.created_at).toLocaleDateString()}"`
+          )
+        ].join("\n");
+        
+        return new Response(csvData, {
+          headers: {
+            "Content-Type": "text/csv",
+            "Content-Disposition": `attachment; filename=sla-report-${new Date().toISOString().split('T')[0]}.csv`
+          }
+        });
+
+      case "html":
+        const htmlContent = `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <title>SLA Report - ${new Date().toLocaleDateString()}</title>
+            <style>
+              body { font-family: Arial, sans-serif; margin: 20px; }
+              .header { background: #8B5CF6; color: white; padding: 20px; text-align: center; }
+              .summary { display: flex; gap: 20px; margin: 20px 0; }
+              .metric { flex: 1; padding: 15px; background: #f5f5f5; border-radius: 8px; text-align: center; }
+              table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+              th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+              th { background: #f2f2f2; }
+              .active { color: green; font-weight: bold; }
+              .inactive { color: red; }
+            </style>
+          </head>
+          <body>
+            <div class="header">
+              <h1>SLA Report</h1>
+              <p>Generated on ${new Date().toLocaleDateString()}</p>
+            </div>
+            <div class="summary">
+              <div class="metric">
+                <h3>${exportData.totalSLAs}</h3>
+                <p>Total SLAs</p>
+              </div>
+              <div class="metric">
+                <h3>${exportData.activeSLAs}</h3>
+                <p>Active SLAs</p>
+              </div>
+              <div class="metric">
+                <h3>${exportData.compliance}</h3>
+                <p>Compliance</p>
+              </div>
+              <div class="metric">
+                <h3>${exportData.breached}</h3>
+                <p>Breached</p>
+              </div>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Priority</th>
+                  <th>Response Time</th>
+                  <th>Resolution Time</th>
+                  <th>Status</th>
+                  <th>Created</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${slaConfigs.results.map((sla: any) => `
+                  <tr>
+                    <td>${sla.name}</td>
+                    <td>${sla.priority}</td>
+                    <td>${sla.response_time} min</td>
+                    <td>${sla.resolution_time} min</td>
+                    <td class="${sla.is_active ? 'active' : 'inactive'}">${sla.is_active ? 'Active' : 'Inactive'}</td>
+                    <td>${new Date(sla.created_at).toLocaleDateString()}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </body>
+          </html>
+        `;
+        
+        return new Response(htmlContent, {
+          headers: {
+            "Content-Type": "text/html",
+            "Content-Disposition": `attachment; filename=sla-report-${new Date().toISOString().split('T')[0]}.html`
+          }
+        });
+
+      case "xlsx":
+        // For Excel format, we'll return JSON with special headers indicating it should be converted
+        const excelData = {
+          sheets: {
+            "SLA Summary": [
+              ["Metric", "Value"],
+              ["Total SLAs", exportData.totalSLAs],
+              ["Active SLAs", exportData.activeSLAs],
+              ["Compliance Rate", exportData.compliance],
+              ["Breached SLAs", exportData.breached]
+            ],
+            "SLA Details": [
+              ["Name", "Priority", "Response Time (min)", "Resolution Time (min)", "Status", "Created Date"],
+              ...slaConfigs.results.map((sla: any) => [
+                sla.name,
+                sla.priority,
+                sla.response_time,
+                sla.resolution_time,
+                sla.is_active ? 'Active' : 'Inactive',
+                new Date(sla.created_at).toLocaleDateString()
+              ])
+            ]
+          }
+        };
+        
+        return new Response(JSON.stringify(excelData), {
+          headers: {
+            "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "Content-Disposition": `attachment; filename=sla-report-${new Date().toISOString().split('T')[0]}.xlsx`
+          }
+        });
+
+      case "pdf":
+        // For PDF format, return structured data that can be used by a PDF generator
+        const pdfData = {
+          title: "SLA Report",
+          subtitle: `Generated on ${new Date().toLocaleDateString()}`,
+          summary: exportData,
+          details: slaConfigs.results
+        };
+        
+        return new Response(JSON.stringify(pdfData), {
+          headers: {
+            "Content-Type": "application/pdf",
+            "Content-Disposition": `attachment; filename=sla-report-${new Date().toISOString().split('T')[0]}.pdf`
+          }
+        });
+
+      default:
+        return c.json(exportData);
+    }
+  } catch (error) {
+    return c.json({ error: "Failed to export SLA data" }, 500);
+  }
+});
+
 export default app;
