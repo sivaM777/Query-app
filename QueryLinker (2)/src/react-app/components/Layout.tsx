@@ -243,7 +243,8 @@ export default function Layout({ children }: LayoutProps) {
                         initial={{ opacity: 0, scale: 0.95, y: -10 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                        className="absolute right-0 mt-2 w-72 bg-slate-900 border border-white/10 rounded-xl shadow-xl backdrop-blur-xl z-[9999]"
+                        className="fixed right-4 top-16 w-72 bg-slate-900 border border-white/10 rounded-xl shadow-2xl backdrop-blur-xl"
+                        style={{ zIndex: 99999 }}
                       >
                         {/* Profile Header */}
                         <div className="px-4 py-3 border-b border-white/10">
