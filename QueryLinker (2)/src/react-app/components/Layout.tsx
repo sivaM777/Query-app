@@ -238,7 +238,7 @@ export default function Layout({ children }: LayoutProps) {
                   </button>
                   
 {showProfileMenu && (
-                    <div className="absolute right-0 top-full mt-2 w-60 bg-slate-800/98 backdrop-blur border border-white/20 rounded-lg shadow-2xl z-[1000] overflow-visible">
+                    <div className="absolute right-0 top-full mt-2 w-60 bg-black border border-white/20 rounded-lg shadow-2xl z-[1000] overflow-visible">
                       <div className="px-3 py-2.5 border-b border-white/20">
                         <p className="text-white font-semibold text-sm">System Administrator</p>
                         <p className="text-gray-400 text-xs">admin@company.com</p>
