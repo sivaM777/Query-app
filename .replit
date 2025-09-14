@@ -51,5 +51,5 @@ externalPort = 3003
 
 [deployment]
 deploymentTarget = "autoscale"
-run = ["npm", "run", "dev"]
+run = ["npx", "wrangler", "pages", "dev", "dist", "--port", "8080"]
 build = ["npm", "run", "build"]
