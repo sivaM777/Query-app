@@ -46,6 +46,10 @@ externalPort = 3000
 localPort = 9230
 externalPort = 3001
 
+[[ports]]
+localPort = 35219
+externalPort = 3003
+
 [deployment]
 deploymentTarget = "autoscale"
 run = ["npx", "wrangler", "pages", "dev", "dist", "--port", "8080"]

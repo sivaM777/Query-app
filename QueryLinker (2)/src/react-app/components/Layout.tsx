@@ -17,6 +17,7 @@ import {
   Sun,
   ChevronLeft,
   ChevronRight,
+  ChevronUp,
   LogOut,
   UserCog,
   Shield,
@@ -46,9 +47,26 @@ export default function Layout({ children }: LayoutProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [darkMode, setDarkMode] = useState(true);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [workspacesDropdownOpen, setWorkspacesDropdownOpen] = useState(false);
   const location = useLocation();
   const { data: integrations } = useIntegrations();
   const profileMenuRef = useRef<HTMLDivElement>(null);
+
+  const handleWorkspaceClick = async (integration: any) => {
+    try {
+      const response = await fetch(`/api/integrations/${integration.id}/workspace`);
+      if (response.ok) {
+        const workspaceData = await response.json();
+        if (workspaceData.workspace_url) {
+          window.open(workspaceData.workspace_url, '_blank');
+        }
+      } else {
+        console.log(`Unable to open ${integration.name} workspace`);
+      }
+    } catch (error) {
+      console.log(`Error opening ${integration.name} workspace:`, error);
+    }
+  };
 
   // Close profile menu when clicking outside
   useEffect(() => {
@@ -146,39 +164,100 @@ export default function Layout({ children }: LayoutProps) {
               })}
             </nav>
 
-            {/* Connected Workspaces */}
-            {!sidebarCollapsed && location.pathname === '/integrations' && (
+            {/* Connected Workspaces - Now as a dropdown */}
+            {!sidebarCollapsed && (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 className="p-4 border-t border-white/10"
               >
-                <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
-                  CONNECTED WORKSPACES ({(integrations || []).filter(integration => integration.is_active).length})
-                </h3>
-                <div className="space-y-2">
-                  {(integrations || []).filter(integration => integration.is_active).map((integration) => (
-                    <div key={integration.id} className="flex items-center space-x-3 px-3 py-2 text-gray-300 hover:bg-white/5 rounded-lg transition-colors">
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold ${
-                        integration.type === 'jira' ? 'bg-blue-500' :
-                        integration.type === 'github' ? 'bg-gray-800' :
-                        integration.type === 'servicenow' ? 'bg-green-500' :
-                        integration.type === 'zendesk' ? 'bg-orange-500' :
-                        integration.type === 'confluence' ? 'bg-blue-600' :
-                        'bg-purple-500'
-                      }`}>
-                        {integration.name.charAt(0).toUpperCase()}
-                      </div>
-                      <span className="text-sm">{integration.name}</span>
-                    </div>
-                  ))}
-                  {(!integrations || integrations.filter(integration => integration.is_active).length === 0) && (
-                    <div className="text-center py-4">
-                      <p className="text-gray-500 text-sm">No active integrations</p>
-                      <p className="text-gray-600 text-xs mt-1">Connect systems to see workspaces here</p>
-                    </div>
+                <button
+                  onClick={() => setWorkspacesDropdownOpen(!workspacesDropdownOpen)}
+                  className="flex items-center justify-between w-full text-left mb-3 hover:bg-white/5 rounded-lg px-2 py-1 transition-colors"
+                >
+                  <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                    CONNECTED WORKSPACES ({(integrations || []).filter(integration => integration.is_active).length})
+                  </h3>
+                  {workspacesDropdownOpen ? (
+                    <ChevronUp className="w-4 h-4 text-gray-400" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 text-gray-400" />
                   )}
-                </div>
+                </button>
+                
+                <AnimatePresence>
+                  {workspacesDropdownOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="space-y-2 overflow-hidden"
+                    >
+                      {(integrations || []).map((integration) => {
+                        const isActive = integration.is_active;
+                        const iconBgColor = 
+                          integration.type === 'notion' ? 'bg-black' :
+                          integration.type === 'linear' ? 'bg-purple-600' :
+                          integration.type === 'zendesk' ? 'bg-yellow-600' :
+                          integration.type === 'slack' ? 'bg-green-600' :
+                          integration.type === 'github' ? 'bg-gray-800' :
+                          integration.type === 'confluence' ? 'bg-blue-600' :
+                          integration.type === 'jira' ? 'bg-blue-500' :
+                          'bg-purple-500';
+                        
+                        return (
+                          <motion.div 
+                            key={integration.id} 
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            className={`flex items-center justify-between space-x-3 px-3 py-2 rounded-lg transition-colors ${
+                              isActive 
+                                ? 'text-gray-300 hover:bg-white/10 cursor-pointer' 
+                                : 'text-gray-500 bg-white/5'
+                            }`}
+                            onClick={() => isActive && handleWorkspaceClick(integration)}
+                          >
+                            <div className="flex items-center space-x-3">
+                              <div className={`w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold ${iconBgColor}`}>
+                                {integration.type === 'notion' ? 'N' :
+                                 integration.type === 'linear' ? 'L' :
+                                 integration.type === 'zendesk' ? 'Z' :
+                                 integration.type === 'slack' ? 'S' :
+                                 integration.type === 'github' ? 'G' :
+                                 integration.type === 'confluence' ? 'C' :
+                                 integration.type === 'jira' ? 'J' :
+                                 integration.name.charAt(0).toUpperCase()}
+                              </div>
+                              <div>
+                                <div className="text-sm font-medium">{integration.name}</div>
+                                <div className="text-xs text-gray-500">
+                                  {isActive ? 'Connected' : 'Not connected'}
+                                </div>
+                              </div>
+                            </div>
+                            
+                            <div className={`w-2 h-2 rounded-full ${
+                              isActive ? 'bg-green-400' : 'bg-gray-500'
+                            }`} />
+                          </motion.div>
+                        );
+                      })}
+                      
+                      {(!integrations || integrations.length === 0) && (
+                        <div className="text-center py-4">
+                          <p className="text-gray-500 text-sm">No integrations found</p>
+                          <Link 
+                            to="/integrations" 
+                            className="text-purple-400 text-xs hover:text-purple-300 transition-colors"
+                          >
+                            Set up integrations
+                          </Link>
+                        </div>
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </motion.div>
             )}
           </div>

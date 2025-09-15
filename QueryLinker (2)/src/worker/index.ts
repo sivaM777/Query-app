@@ -87,20 +87,167 @@ app.post("/api/integrations/:id/sync", async (c) => {
   try {
     const id = c.req.param("id");
     
+    // Get the integration details
+    const integration = await c.env.DB.prepare("SELECT * FROM integrations WHERE id = ?").bind(id).first();
+    
+    if (!integration) {
+      return c.json({ error: "Integration not found" }, 404);
+    }
+    
+    let syncResult = { status: 'success', data: null };
+    
+    // Simulate different sync behaviors based on integration type
+    if (integration.type === 'notion' && integration.is_active) {
+      syncResult = {
+        status: 'success',
+        data: {
+          pages_synced: Math.floor(Math.random() * 50) + 10,
+          databases_synced: Math.floor(Math.random() * 10) + 2,
+          last_activity: new Date().toISOString()
+        }
+      };
+    } else if (integration.type === 'github' && integration.is_active) {
+      syncResult = {
+        status: 'success',
+        data: {
+          repos_synced: Math.floor(Math.random() * 20) + 5,
+          issues_synced: Math.floor(Math.random() * 100) + 20,
+          last_commit: new Date().toISOString()
+        }
+      };
+    } else if (integration.type === 'linear' && integration.is_active) {
+      syncResult = {
+        status: 'success',
+        data: {
+          issues_synced: Math.floor(Math.random() * 30) + 10,
+          projects_synced: Math.floor(Math.random() * 5) + 2,
+          last_update: new Date().toISOString()
+        }
+      };
+    } else if (!integration.is_active) {
+      syncResult = {
+        status: 'disconnected',
+        data: { message: 'Integration is not active. Please connect it first.' }
+      };
+    } else {
+      syncResult = {
+        status: 'not_implemented',
+        data: { message: `Sync not yet implemented for ${integration.type}` }
+      };
+    }
+    
     // Update last_sync_at timestamp
     const { success } = await c.env.DB.prepare(`
       UPDATE integrations 
-      SET last_sync_at = datetime('now'), updated_at = datetime('now')
+      SET last_sync_at = datetime('now'), updated_at = datetime('now'), config = ?
       WHERE id = ?
-    `).bind(id).run();
+    `).bind(JSON.stringify({ ...JSON.parse(integration.config || '{}'), ...syncResult.data }), id).run();
 
     if (success) {
-      return c.json({ message: "Sync completed successfully", timestamp: new Date().toISOString() });
+      return c.json({ 
+        message: "Sync completed successfully", 
+        timestamp: new Date().toISOString(),
+        ...syncResult
+      });
     } else {
-      return c.json({ error: "Integration not found" }, 404);
+      return c.json({ error: "Failed to update integration" }, 500);
     }
   } catch (error) {
     return c.json({ error: "Failed to sync integration" }, 500);
+  }
+});
+
+// Workspace data endpoint
+app.get("/api/integrations/:id/workspace", async (c) => {
+  try {
+    const id = c.req.param("id");
+    
+    // Get the integration details
+    const integration = await c.env.DB.prepare("SELECT * FROM integrations WHERE id = ?").bind(id).first();
+    
+    if (!integration) {
+      return c.json({ error: "Integration not found" }, 404);
+    }
+    
+    if (!integration.is_active) {
+      return c.json({ error: "Integration is not connected", status: "disconnected" }, 400);
+    }
+    
+    // Return mock workspace data based on integration type
+    const workspaceData = {
+      notion: {
+        workspace_name: "My Notion Workspace",
+        user_name: "John Developer",
+        pages_count: 42,
+        databases_count: 8,
+        last_accessed: new Date().toISOString(),
+        workspace_url: "https://www.notion.so/workspace"
+      },
+      github: {
+        workspace_name: "GitHub",
+        user_name: "johndeveloper",
+        repos_count: 15,
+        issues_count: 23,
+        last_accessed: new Date().toISOString(),
+        workspace_url: "https://github.com/johndeveloper"
+      },
+      linear: {
+        workspace_name: "Linear Team",
+        user_name: "John Developer",
+        issues_count: 18,
+        projects_count: 3,
+        last_accessed: new Date().toISOString(),
+        workspace_url: "https://linear.app/team"
+      },
+      zendesk: {
+        workspace_name: "Support Portal",
+        user_name: "John Support",
+        tickets_count: 156,
+        agents_count: 12,
+        last_accessed: new Date().toISOString(),
+        workspace_url: "https://company.zendesk.com"
+      },
+      slack: {
+        workspace_name: "Company Slack",
+        user_name: "John Developer",
+        channels_count: 24,
+        messages_count: 1250,
+        last_accessed: new Date().toISOString(),
+        workspace_url: "https://company.slack.com"
+      },
+      confluence: {
+        workspace_name: "Company Wiki",
+        user_name: "John Developer",
+        pages_count: 89,
+        spaces_count: 6,
+        last_accessed: new Date().toISOString(),
+        workspace_url: "https://company.atlassian.net/wiki"
+      },
+      jira: {
+        workspace_name: "Project Tracker",
+        user_name: "John Developer",
+        issues_count: 67,
+        projects_count: 4,
+        last_accessed: new Date().toISOString(),
+        workspace_url: "https://company.atlassian.net/jira"
+      }
+    };
+    
+    const data = workspaceData[integration.type] || {
+      workspace_name: integration.name,
+      user_name: "Connected User",
+      status: "connected",
+      last_accessed: new Date().toISOString()
+    };
+    
+    return c.json({
+      integration_id: integration.id,
+      type: integration.type,
+      name: integration.name,
+      ...data
+    });
+  } catch (error) {
+    return c.json({ error: "Failed to fetch workspace data" }, 500);
   }
 });
 
